@@ -1,0 +1,359 @@
+{
+  "entities": {
+    "UserProfileDoc": {
+      "title": "UserProfileDoc",
+      "description": "User wellness profile, onboarding state, theme/accessibility preferences, and sync settings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "avatar": { "type": "string" },
+        "goals": { "type": "array" },
+        "challenges": { "type": "array" },
+        "zodiacSign": { "type": "string" },
+        "birthDate": { "type": "string" },
+        "birthTime": { "type": "string" },
+        "birthLocation": { "type": "string" },
+        "onboardingCompleted": { "type": "boolean" },
+        "subscriptionTier": { "type": "string" },
+        "enableCycleTracking": { "type": "boolean" },
+        "enableAstrology": { "type": "boolean" },
+        "enableBreathing": { "type": "boolean" },
+        "enableMeditation": { "type": "boolean" },
+        "showSupplementLog": { "type": "boolean" },
+        "themeId": { "type": "string" },
+        "fontScale": { "type": "number" },
+        "reduceMotion": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "onboardingCompleted", "createdAt", "updatedAt"]
+    },
+    "JournalEntryDoc": {
+      "title": "JournalEntryDoc",
+      "description": "User journal entry with optional AI prompt, tags, and reflection analysis",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "content": { "type": "string" },
+        "prompt": { "type": "string" },
+        "tags": { "type": "array" },
+        "moodRating": { "type": "integer" },
+        "analysis": { "type": "string" },
+        "sentiment": { "type": "string" },
+        "themes": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "content", "createdAt", "updatedAt"]
+    },
+    "MoodLogDoc": {
+      "title": "MoodLogDoc",
+      "description": "Daily mood rating and trigger tags",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "mood": { "type": "integer" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "mood", "createdAt", "updatedAt"]
+    },
+    "DailyHabitDoc": {
+      "title": "DailyHabitDoc",
+      "description": "Custom or default daily wellness habit definition",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "category", "active", "createdAt", "updatedAt"]
+    },
+    "HabitCompletionDoc": {
+      "title": "HabitCompletionDoc",
+      "description": "Habit completion mark for a specific habit and date",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "habitId": { "type": "string" },
+        "date": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "habitId", "date", "completed", "createdAt", "updatedAt"]
+    },
+    "EnergyCheckInDoc": {
+      "title": "EnergyCheckInDoc",
+      "description": "Daily mental and physical energy battery scores (1-100)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "mentalBattery": { "type": "integer" },
+        "physicalBattery": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "mentalBattery", "physicalBattery", "createdAt", "updatedAt"]
+    },
+    "ThoughtReframeDoc": {
+      "title": "ThoughtReframeDoc",
+      "description": "CBT thought reframe record with cognitive distortion tag",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "thought": { "type": "string" },
+        "distortion": { "type": "string" },
+        "explanation": { "type": "string" },
+        "reframes": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "thought", "distortion", "createdAt", "updatedAt"]
+    },
+    "GratitudeNoteDoc": {
+      "title": "GratitudeNoteDoc",
+      "description": "Gratitude jar note",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "date": { "type": "string" },
+        "colorIndex": { "type": "integer" },
+        "rotation": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "text", "date", "createdAt", "updatedAt"]
+    },
+    "AffirmationDoc": {
+      "title": "AffirmationDoc",
+      "description": "Saved or custom affirmation with favorite and dashboard pin flags",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "favorite": { "type": "boolean" },
+        "pinned": { "type": "boolean" },
+        "custom": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "text", "favorite", "pinned", "custom", "createdAt", "updatedAt"]
+    },
+    "BreathingPatternDoc": {
+      "title": "BreathingPatternDoc",
+      "description": "Custom user breathing timing pattern",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "inhaleSeconds": { "type": "integer" },
+        "holdInSeconds": { "type": "integer" },
+        "exhaleSeconds": { "type": "integer" },
+        "holdOutSeconds": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "inhaleSeconds", "holdInSeconds", "exhaleSeconds", "holdOutSeconds", "createdAt", "updatedAt"]
+    },
+    "BreathingSessionDoc": {
+      "title": "BreathingSessionDoc",
+      "description": "Completed breathing or meditation session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "durationSeconds": { "type": "integer" },
+        "technique": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "durationSeconds", "technique", "createdAt", "updatedAt"]
+    },
+    "SleepLogDoc": {
+      "title": "SleepLogDoc",
+      "description": "Nightly wind-down checklist and morning sleep quality score",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "checklistDone": { "type": "array" },
+        "qualityRating": { "type": "integer" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "qualityRating", "createdAt", "updatedAt"]
+    },
+    "CopingRatingDoc": {
+      "title": "CopingRatingDoc",
+      "description": "Effectiveness rating for coping strategies",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "strategyTitle": { "type": "string" },
+        "problemSummary": { "type": "string" },
+        "stars": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "strategyTitle", "stars", "createdAt", "updatedAt"]
+    },
+    "IfThenPlanDoc": {
+      "title": "IfThenPlanDoc",
+      "description": "If-Then trigger and safe space coping plan",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "triggerText": { "type": "string" },
+        "actionText": { "type": "string" },
+        "safeSpace": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "triggerText", "actionText", "createdAt", "updatedAt"]
+    },
+    "QuizLogDoc": {
+      "title": "QuizLogDoc",
+      "description": "Completed mental health screening log",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "quizId": { "type": "string" },
+        "quizLabel": { "type": "string" },
+        "score": { "type": "integer" },
+        "maxScore": { "type": "integer" },
+        "level": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "quizId", "quizLabel", "score", "maxScore", "level", "createdAt", "updatedAt"]
+    },
+    "SupplementLogDoc": {
+      "title": "SupplementLogDoc",
+      "description": "Daily medication and supplement adherence log",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "itemsDone": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "createdAt", "updatedAt"]
+    },
+    "EmergencyItemDoc": {
+      "title": "EmergencyItemDoc",
+      "description": "Personal safety plan contact, activity, or mantra",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "label": { "type": "string" },
+        "value": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "label", "value", "createdAt", "updatedAt"]
+    },
+    "CycleDataDoc": {
+      "title": "CycleDataDoc",
+      "description": "Cycle tracker configuration",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lastPeriodStart": { "type": "string" },
+        "cycleLength": { "type": "integer" },
+        "periodLength": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "lastPeriodStart", "cycleLength", "periodLength", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfileDoc" },
+      "description": "Private user wellness profile and settings"
+    },
+    "/users/{userId}/journals/{entryId}": {
+      "schema": { "$ref": "#/entities/JournalEntryDoc" },
+      "description": "User journal entries"
+    },
+    "/users/{userId}/moods/{dateId}": {
+      "schema": { "$ref": "#/entities/MoodLogDoc" },
+      "description": "Daily mood logs"
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": { "$ref": "#/entities/DailyHabitDoc" },
+      "description": "Daily habits"
+    },
+    "/users/{userId}/habitCompletions/{completionId}": {
+      "schema": { "$ref": "#/entities/HabitCompletionDoc" },
+      "description": "Per-date habit completions"
+    },
+    "/users/{userId}/energyLogs/{dateId}": {
+      "schema": { "$ref": "#/entities/EnergyCheckInDoc" },
+      "description": "Daily mental and physical battery check-ins"
+    },
+    "/users/{userId}/thoughtReframes/{reframeId}": {
+      "schema": { "$ref": "#/entities/ThoughtReframeDoc" },
+      "description": "CBT thought reframe logs"
+    },
+    "/users/{userId}/gratitudeNotes/{noteId}": {
+      "schema": { "$ref": "#/entities/GratitudeNoteDoc" },
+      "description": "Gratitude jar notes"
+    },
+    "/users/{userId}/affirmations/{affirmationId}": {
+      "schema": { "$ref": "#/entities/AffirmationDoc" },
+      "description": "Saved and custom affirmations"
+    },
+    "/users/{userId}/breathingPatterns/{patternId}": {
+      "schema": { "$ref": "#/entities/BreathingPatternDoc" },
+      "description": "Custom breathing patterns"
+    },
+    "/users/{userId}/breathingSessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/BreathingSessionDoc" },
+      "description": "Completed breathing sessions"
+    },
+    "/users/{userId}/sleepLogs/{dateId}": {
+      "schema": { "$ref": "#/entities/SleepLogDoc" },
+      "description": "Daily sleep quality and wind-down checklists"
+    },
+    "/users/{userId}/copingRatings/{ratingId}": {
+      "schema": { "$ref": "#/entities/CopingRatingDoc" },
+      "description": "Coping strategy effectiveness star ratings"
+    },
+    "/users/{userId}/ifThenTriggers/{triggerId}": {
+      "schema": { "$ref": "#/entities/IfThenPlanDoc" },
+      "description": "If-Then trigger and safe-space inventory"
+    },
+    "/users/{userId}/quizzes/{quizLogId}": {
+      "schema": { "$ref": "#/entities/QuizLogDoc" },
+      "description": "Quiz assessment history"
+    },
+    "/users/{userId}/supplements/{dateId}": {
+      "schema": { "$ref": "#/entities/SupplementLogDoc" },
+      "description": "Daily supplement adherence logs"
+    },
+    "/users/{userId}/emergencyItems/{itemId}": {
+      "schema": { "$ref": "#/entities/EmergencyItemDoc" },
+      "description": "Personal emergency safety plan items"
+    },
+    "/users/{userId}/cycleData/{docId}": {
+      "schema": { "$ref": "#/entities/CycleDataDoc" },
+      "description": "Cycle tracking settings"
+    }
+  }
+}

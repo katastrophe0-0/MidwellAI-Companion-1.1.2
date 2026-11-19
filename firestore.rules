@@ -1,0 +1,504 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidStringList(list, maxItems) {
+      return list is list && list.size() <= maxItems && (list.size() == 0 || list[0] is string);
+    }
+
+    function validCreateTimestamps(data) {
+      return data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function validUpdateTimestamps(data, prev) {
+      return data.createdAt == prev.createdAt &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.name, 0, 80) &&
+             data.onboardingCompleted is bool &&
+             (!('avatar' in data) || isValidString(data.avatar, 1, 16)) &&
+             (!('goals' in data) || isValidStringList(data.goals, 12)) &&
+             (!('challenges' in data) || isValidStringList(data.challenges, 12)) &&
+             (!('zodiacSign' in data) || isValidString(data.zodiacSign, 0, 32)) &&
+             (!('birthDate' in data) || isValidString(data.birthDate, 0, 32)) &&
+             (!('birthTime' in data) || isValidString(data.birthTime, 0, 32)) &&
+             (!('birthLocation' in data) || isValidString(data.birthLocation, 0, 120)) &&
+             (!('subscriptionTier' in data) || data.subscriptionTier in ['FREE', 'SPARK', 'GLOW', 'RADIANCE']) &&
+             (!('enableCycleTracking' in data) || data.enableCycleTracking is bool) &&
+             (!('enableAstrology' in data) || data.enableAstrology is bool) &&
+             (!('enableBreathing' in data) || data.enableBreathing is bool) &&
+             (!('enableMeditation' in data) || data.enableMeditation is bool) &&
+             (!('showSupplementLog' in data) || data.showSupplementLog is bool) &&
+             (!('themeId' in data) || data.themeId in ['MIDNIGHT_INDIGO', 'SAGE_FOREST', 'WARM_SAND', 'HIGH_CONTRAST_DARK']) &&
+             (!('fontScale' in data) || (data.fontScale is number && data.fontScale >= 0.85 && data.fontScale <= 1.4)) &&
+             (!('reduceMotion' in data) || data.reduceMotion is bool);
+    }
+
+    function isValidJournalEntry(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 1, 40) &&
+             isValidString(data.content, 1, 10000) &&
+             (!('prompt' in data) || isValidString(data.prompt, 0, 500)) &&
+             (!('tags' in data) || isValidStringList(data.tags, 15)) &&
+             (!('moodRating' in data) || (data.moodRating is int && data.moodRating >= 1 && data.moodRating <= 5)) &&
+             (!('analysis' in data) || isValidString(data.analysis, 0, 4000)) &&
+             (!('sentiment' in data) || isValidString(data.sentiment, 0, 80)) &&
+             (!('themes' in data) || isValidStringList(data.themes, 10));
+    }
+
+    function isValidMoodLog(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 8, 20) &&
+             data.mood is int && data.mood >= 1 && data.mood <= 5 &&
+             (!('tags' in data) || isValidStringList(data.tags, 15));
+    }
+
+    function isValidDailyHabit(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.title, 1, 80) &&
+             isValidString(data.category, 1, 40) &&
+             data.active is bool;
+    }
+
+    function isValidHabitCompletion(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.habitId, 1, 128) &&
+             isValidString(data.date, 8, 20) &&
+             data.completed is bool;
+    }
+
+    function isValidEnergyCheckIn(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 8, 20) &&
+             data.mentalBattery is int && data.mentalBattery >= 1 && data.mentalBattery <= 100 &&
+             data.physicalBattery is int && data.physicalBattery >= 1 && data.physicalBattery <= 100;
+    }
+
+    function isValidThoughtReframe(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 1, 40) &&
+             isValidString(data.thought, 1, 2000) &&
+             isValidString(data.distortion, 1, 120) &&
+             (!('explanation' in data) || isValidString(data.explanation, 0, 2000)) &&
+             (!('reframes' in data) || isValidStringList(data.reframes, 6));
+    }
+
+    function isValidGratitudeNote(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.text, 1, 1000) &&
+             isValidString(data.date, 1, 40) &&
+             (!('colorIndex' in data) || (data.colorIndex is int && data.colorIndex >= 0 && data.colorIndex <= 10)) &&
+             (!('rotation' in data) || data.rotation is number);
+    }
+
+    function isValidAffirmation(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.text, 1, 500) &&
+             data.favorite is bool &&
+             data.pinned is bool &&
+             data.custom is bool;
+    }
+
+    function isValidBreathingPattern(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.name, 1, 80) &&
+             data.inhaleSeconds is int && data.inhaleSeconds >= 1 && data.inhaleSeconds <= 30 &&
+             data.holdInSeconds is int && data.holdInSeconds >= 0 && data.holdInSeconds <= 30 &&
+             data.exhaleSeconds is int && data.exhaleSeconds >= 1 && data.exhaleSeconds <= 30 &&
+             data.holdOutSeconds is int && data.holdOutSeconds >= 0 && data.holdOutSeconds <= 30;
+    }
+
+    function isValidBreathingSession(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 8, 20) &&
+             data.durationSeconds is int && data.durationSeconds >= 1 && data.durationSeconds <= 7200 &&
+             isValidString(data.technique, 1, 120);
+    }
+
+    function isValidSleepLog(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 8, 20) &&
+             (!('checklistDone' in data) || isValidStringList(data.checklistDone, 15)) &&
+             data.qualityRating is int && data.qualityRating >= 0 && data.qualityRating <= 5 &&
+             (!('notes' in data) || isValidString(data.notes, 0, 1000));
+    }
+
+    function isValidCopingRating(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.strategyTitle, 1, 120) &&
+             (!('problemSummary' in data) || isValidString(data.problemSummary, 0, 400)) &&
+             data.stars is int && data.stars >= 1 && data.stars <= 5;
+    }
+
+    function isValidIfThenPlan(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.triggerText, 1, 300) &&
+             isValidString(data.actionText, 1, 500) &&
+             (!('safeSpace' in data) || isValidString(data.safeSpace, 0, 200));
+    }
+
+    function isValidQuizLog(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 1, 40) &&
+             isValidString(data.quizId, 1, 40) &&
+             isValidString(data.quizLabel, 1, 80) &&
+             data.score is int && data.score >= 0 && data.score <= 200 &&
+             data.maxScore is int && data.maxScore >= 1 && data.maxScore <= 200 &&
+             isValidString(data.level, 1, 120);
+    }
+
+    function isValidSupplementLog(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.date, 8, 20) &&
+             (!('itemsDone' in data) || isValidStringList(data.itemsDone, 20));
+    }
+
+    function isValidEmergencyItem(data, userId) {
+      return data.userId == userId &&
+             data.type in ['contact', 'activity', 'mantra', 'warning_sign'] &&
+             isValidString(data.label, 1, 80) &&
+             isValidString(data.value, 1, 300);
+    }
+
+    function isValidCycleData(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.lastPeriodStart, 8, 20) &&
+             data.cycleLength is int && data.cycleLength >= 15 && data.cycleLength <= 60 &&
+             data.periodLength is int && data.periodLength >= 1 && data.periodLength <= 15;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'name', 'onboardingCompleted', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'avatar', 'goals', 'challenges', 'zodiacSign',
+                         'birthDate', 'birthTime', 'birthLocation', 'onboardingCompleted',
+                         'subscriptionTier', 'enableCycleTracking', 'enableAstrology',
+                         'enableBreathing', 'enableMeditation', 'showSupplementLog',
+                         'themeId', 'fontScale', 'reduceMotion', 'createdAt', 'updatedAt'
+                       ]) &&
+                       validCreateTimestamps(incoming()) &&
+                       isValidUserProfile(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       validUpdateTimestamps(incoming(), existing()) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'avatar', 'goals', 'challenges', 'zodiacSign',
+                         'birthDate', 'birthTime', 'birthLocation', 'onboardingCompleted',
+                         'subscriptionTier', 'enableCycleTracking', 'enableAstrology',
+                         'enableBreathing', 'enableMeditation', 'showSupplementLog',
+                         'themeId', 'fontScale', 'reduceMotion', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /journals/{entryId} {
+        allow get: if isOwner(userId) && isValidId(entryId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(entryId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'content', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'content', 'prompt', 'tags', 'moodRating', 'analysis', 'sentiment', 'themes', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidJournalEntry(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(entryId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidJournalEntry(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['date', 'content', 'prompt', 'tags', 'moodRating', 'analysis', 'sentiment', 'themes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(entryId);
+      }
+
+      match /moods/{dateId} {
+        allow get: if isOwner(userId) && isValidId(dateId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'mood', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'mood', 'tags', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidMoodLog(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidMoodLog(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['date', 'mood', 'tags', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(dateId);
+      }
+
+      match /habits/{habitId} {
+        allow get: if isOwner(userId) && isValidId(habitId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(habitId) &&
+                         incoming().keys().hasAll(['userId', 'title', 'category', 'active', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'category', 'active', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidDailyHabit(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(habitId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidDailyHabit(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'active', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(habitId);
+      }
+
+      match /habitCompletions/{completionId} {
+        allow get: if isOwner(userId) && isValidId(completionId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(completionId) &&
+                         incoming().keys().hasAll(['userId', 'habitId', 'date', 'completed', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'habitId', 'date', 'completed', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidHabitCompletion(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(completionId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidHabitCompletion(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(completionId);
+      }
+
+      match /energyLogs/{dateId} {
+        allow get: if isOwner(userId) && isValidId(dateId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'mentalBattery', 'physicalBattery', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'mentalBattery', 'physicalBattery', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidEnergyCheckIn(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidEnergyCheckIn(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['mentalBattery', 'physicalBattery', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(dateId);
+      }
+
+      match /thoughtReframes/{reframeId} {
+        allow get: if isOwner(userId) && isValidId(reframeId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(reframeId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'thought', 'distortion', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'thought', 'distortion', 'explanation', 'reframes', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidThoughtReframe(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(reframeId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidThoughtReframe(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['thought', 'distortion', 'explanation', 'reframes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(reframeId);
+      }
+
+      match /gratitudeNotes/{noteId} {
+        allow get: if isOwner(userId) && isValidId(noteId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(noteId) &&
+                         incoming().keys().hasAll(['userId', 'text', 'date', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'text', 'date', 'colorIndex', 'rotation', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidGratitudeNote(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(noteId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidGratitudeNote(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['text', 'date', 'colorIndex', 'rotation', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(noteId);
+      }
+
+      match /affirmations/{affirmationId} {
+        allow get: if isOwner(userId) && isValidId(affirmationId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(affirmationId) &&
+                         incoming().keys().hasAll(['userId', 'text', 'favorite', 'pinned', 'custom', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'text', 'favorite', 'pinned', 'custom', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidAffirmation(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(affirmationId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidAffirmation(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['text', 'favorite', 'pinned', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(affirmationId);
+      }
+
+      match /breathingPatterns/{patternId} {
+        allow get: if isOwner(userId) && isValidId(patternId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(patternId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'inhaleSeconds', 'holdInSeconds', 'exhaleSeconds', 'holdOutSeconds', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'inhaleSeconds', 'holdInSeconds', 'exhaleSeconds', 'holdOutSeconds', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidBreathingPattern(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(patternId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidBreathingPattern(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'inhaleSeconds', 'holdInSeconds', 'exhaleSeconds', 'holdOutSeconds', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(patternId);
+      }
+
+      match /breathingSessions/{sessionId} {
+        allow get: if isOwner(userId) && isValidId(sessionId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(sessionId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'durationSeconds', 'technique', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'durationSeconds', 'technique', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidBreathingSession(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(sessionId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidBreathingSession(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['date', 'durationSeconds', 'technique', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(sessionId);
+      }
+
+      match /sleepLogs/{dateId} {
+        allow get: if isOwner(userId) && isValidId(dateId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'qualityRating', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'checklistDone', 'qualityRating', 'notes', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidSleepLog(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidSleepLog(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['checklistDone', 'qualityRating', 'notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(dateId);
+      }
+
+      match /copingRatings/{ratingId} {
+        allow get: if isOwner(userId) && isValidId(ratingId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(ratingId) &&
+                         incoming().keys().hasAll(['userId', 'strategyTitle', 'stars', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'strategyTitle', 'problemSummary', 'stars', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidCopingRating(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(ratingId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidCopingRating(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['strategyTitle', 'problemSummary', 'stars', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(ratingId);
+      }
+
+      match /ifThenTriggers/{triggerId} {
+        allow get: if isOwner(userId) && isValidId(triggerId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(triggerId) &&
+                         incoming().keys().hasAll(['userId', 'triggerText', 'actionText', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'triggerText', 'actionText', 'safeSpace', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidIfThenPlan(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(triggerId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidIfThenPlan(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['triggerText', 'actionText', 'safeSpace', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(triggerId);
+      }
+
+      match /quizzes/{quizLogId} {
+        allow get: if isOwner(userId) && isValidId(quizLogId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(quizLogId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'quizId', 'quizLabel', 'score', 'maxScore', 'level', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'quizId', 'quizLabel', 'score', 'maxScore', 'level', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidQuizLog(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(quizLogId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidQuizLog(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['level', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(quizLogId);
+      }
+
+      match /supplements/{dateId} {
+        allow get: if isOwner(userId) && isValidId(dateId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().keys().hasAll(['userId', 'date', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'date', 'itemsDone', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidSupplementLog(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(dateId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidSupplementLog(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['itemsDone', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(dateId);
+      }
+
+      match /emergencyItems/{itemId} {
+        allow get: if isOwner(userId) && isValidId(itemId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(itemId) &&
+                         incoming().keys().hasAll(['userId', 'type', 'label', 'value', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'type', 'label', 'value', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidEmergencyItem(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(itemId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidEmergencyItem(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['type', 'label', 'value', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(itemId);
+      }
+
+      match /cycleData/{docId} {
+        allow get: if isOwner(userId) && isValidId(docId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(docId) &&
+                         incoming().keys().hasAll(['userId', 'lastPeriodStart', 'cycleLength', 'periodLength', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'lastPeriodStart', 'cycleLength', 'periodLength', 'createdAt', 'updatedAt']) &&
+                         validCreateTimestamps(incoming()) &&
+                         isValidCycleData(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(docId) &&
+                         incoming().userId == existing().userId &&
+                         validUpdateTimestamps(incoming(), existing()) &&
+                         isValidCycleData(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['lastPeriodStart', 'cycleLength', 'periodLength', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(docId);
+      }
+    }
+  }
+}

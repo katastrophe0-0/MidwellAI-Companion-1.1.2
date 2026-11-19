@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">MindWell</string>
+    <string name="disclaimer_title">Important Medical Disclaimer</string>
+    <string name="disclaimer_body">MindWell AI Companion is not a medical device. Content, reflections, and tools are for informational, self-help, and wellness purposes only and do not diagnose, treat, cure, or prevent any condition. If you are in crisis, call 988 (US) or 911 immediately.</string>
+    <string name="disclaimer_accept">I Understand &amp; Agree</string>
+    <string name="sign_in_title">Welcome to MindWell</string>
+    <string name="sign_in_subtitle">Sign in with Google to sync your wellness journal, mood trends, habits, and Gemini AI reflections across your devices.</string>
+    <string name="sign_in_button">Sign in with Google</string>
+    <string name="crisis_banner_title">Immediate Crisis Support (24/7 Free &amp; Confidential)</string>
+    <string name="crisis_lifeline_label">Call or Text 988 Lifeline</string>
+    <string name="crisis_text_label">Text HOME to 741741</string>
+    <string name="crisis_emergency_label">Call 911 Emergency</string>
+</resources>

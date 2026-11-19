@@ -1,0 +1,8 @@
+{
+  "name": "MindWell",
+  "description": "An AI-powered mental well-being companion offering psychoeducational quizzes, journaling, mood tracking, breathing and somatic exercises, sleep stories, coping strategies, and supportive resources.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
